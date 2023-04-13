@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!../.venv/bin/python3
 # encoding: utf-8
 
 from seedemu.layers import Base, Routing, Ebgp, PeerRelationship, Ibgp, Ospf
@@ -13,27 +13,33 @@ routing = Routing()
 ebgp    = Ebgp()
 ibgp    = Ibgp()
 ospf    = Ospf()
-"""
 web     = WebService()
+"""
 ovpn    = OpenVpnRemoteAccessProvider()
 """
+
+
+def add_software(h,sw):
+    # 'mysql-server'
+    # 'iptables'
+    default_software = ['nmap','telnet','telnetd','net-tools']
+    for s in default_software + sw:
+        h.addSoftware(s)
+
+
 ###############################################################################
 # core network (AS-100)
 as100 = base.createAutonomousSystem(100)
 as100_net0 = as100.createNetwork('net0')
 
 # Create 4 routers: r1 and r4
-as100_r1 = as100.createRouter('r1')
-as100_r1.joinNetwork('net0')
+as100_r1 = as100.createRouter('r1').joinNetwork('net0')
 
-as100_r2 = as100.createRouter('r2')
-as100_r2.joinNetwork('net0')
+as100_r2 = as100.createRouter('r2').joinNetwork('net0')
 
-as100_r3 = as100.createRouter('r3')
-as100_r3.joinNetwork('net0')
+as100_r3 = as100.createRouter('r3').joinNetwork('net0')
 
-as100_r4 = as100.createRouter('r4')
-as100_r4.joinNetwork('net0')
+as100_r4 = as100.createRouter('r4').joinNetwork('net0')
 
 ###############################################################################
 # AS-201 # large data center
@@ -42,12 +48,16 @@ as201_net0 = as201.createNetwork('net-201-0', '10.0.0.0/24')
 as201_net1 = as201.createNetwork('net-201-1', '10.0.1.0/24')
 
 as201_r1   = as201.createRouter('r1')
+add_software(as201_r1, ['iptables'])
+
 as201_r2   = as201.createRouter('r2')
+add_software(as201_r2, ['iptables'])
 
 as201_r1.joinNetwork('net-201-0')
 as201_r1.joinNetwork('net-201-1')
 as201_r2.joinNetwork('net-201-0')
 as201_r2.joinNetwork('net-201-1')
+
 ###############################################################################
 # AS-202    # large office, headquarter OR another data center
 as202      = base.createAutonomousSystem(202)  
@@ -131,22 +141,31 @@ ebgp.addCrossConnectPeering(100, 205, PeerRelationship.Provider)
 ###############################################################################
 # Create hosts in each network
 
-as201_h1 = as201.createHost('host1')
-as201_h1.joinNetwork('net-201-0')
-as201_h2 = as201.createHost('host2')
-as201_h2.joinNetwork('net-201-1')
-as202_h1 = as202.createHost('host3')
-as202_h1.joinNetwork('net-202-0')
-as202_h2 = as202.createHost('host4')
-as202_h2.joinNetwork('net-202-1')
-as203_h1 = as203.createHost('host5')
-as203_h1.joinNetwork('net-203-0')
-as204_h1 = as204.createHost('host6')
-as204_h1.joinNetwork('net-204-0')
-as204_h2 = as204.createHost('host7')
-as204_h2.joinNetwork('net-204-1')
-as205_h1 = as205.createHost('host8')
-as205_h1.joinNetwork('net-205-0')
+as201_h1 = as201.createHost('web').joinNetwork('net-201-0')
+add_software(as201_h1, [])
+as201_h2 = as201.createHost('dbs').joinNetwork('net-201-1')
+add_software(as201_h2, ['mysql-server'])
+
+web.install('web201')
+emu.addBinding(Binding('web201', filter = Filter (nodeName='web', asn=201)))
+
+as202_h1 = as202.createHost('host3').joinNetwork('net-202-0')
+add_software(as202_h1, [])
+
+as202_h2 = as202.createHost('host4').joinNetwork('net-202-1')
+add_software(as202_h2, [])
+
+as203_h1 = as203.createHost('host5').joinNetwork('net-203-0')
+add_software(as203_h1, [])
+
+as204_h1 = as204.createHost('host6').joinNetwork('net-204-0')
+add_software(as204_h1, [])
+
+as204_h2 = as204.createHost('host7').joinNetwork('net-204-1')
+add_software(as204_h2, [])
+
+as205_h1 = as205.createHost('host8').joinNetwork('net-205-0')
+add_software(as205_h1, [])
 
 
 ###############################################################################
@@ -157,7 +176,7 @@ emu.addLayer(routing)
 emu.addLayer(ebgp)
 emu.addLayer(ibgp)
 emu.addLayer(ospf)
-#emu.addLayer(web)
+emu.addLayer(web)
 
 emu.render()
 
