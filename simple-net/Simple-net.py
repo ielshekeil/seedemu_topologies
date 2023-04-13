@@ -81,8 +81,7 @@ firewall.addSoftware('telnet')
 firewall.addSoftware('telnetd')
 firewall.addSoftware('net-tools')
 firewall.addSoftware('iptables')
-#firewall.addBuildCommand('iptables -L -v')
-
+ 
 ###############################################################################
 # Create and set up AS-151
 # It is similar to what is done to AS-150
