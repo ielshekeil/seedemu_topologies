@@ -18,8 +18,23 @@ web     = WebService()
 ovpn    = OpenVpnRemoteAccessProvider()
 """
 
+# Define the function to generate keepalived.conf content
+def generate_keepalived_conf(state, interface, virtual_router_id, priority, virtual_ip):
+    return f"""vrrp_instance VI_1 {{
+    state {state}
+    interface {interface}
+    virtual_router_id {virtual_router_id}
+    priority {priority}
+    advert_int 1
+    virtual_ipaddress {{
+        {virtual_ip}
+    }}
+}}
 
-def add_software(h,sw):
+"""
+
+
+def add_software(h,sw=[]):
     # 'mysql-server'
     # 'iptables'
     default_software = ['nmap','telnet','telnetd','net-tools']
@@ -34,11 +49,8 @@ as100_net0 = as100.createNetwork('net0')
 
 # Create 4 routers: r1 and r4
 as100_r1 = as100.createRouter('r1').joinNetwork('net0')
-
 as100_r2 = as100.createRouter('r2').joinNetwork('net0')
-
 as100_r3 = as100.createRouter('r3').joinNetwork('net0')
-
 as100_r4 = as100.createRouter('r4').joinNetwork('net0')
 
 ###############################################################################
@@ -48,15 +60,27 @@ as201_net0 = as201.createNetwork('net-201-0', '10.0.0.0/24')
 as201_net1 = as201.createNetwork('net-201-1', '10.0.1.0/24')
 
 as201_r1   = as201.createRouter('r1')
-add_software(as201_r1, ['iptables'])
+add_software(as201_r1)
+add_software(as201_r1, ['keepalived']) #, 'iptables'])
 
 as201_r2   = as201.createRouter('r2')
-add_software(as201_r2, ['iptables'])
+add_software(as201_r2)
+add_software(as201_r2, ['keepalived']) #, 'iptables'])
 
-as201_r1.joinNetwork('net-201-0')
-as201_r1.joinNetwork('net-201-1')
-as201_r2.joinNetwork('net-201-0')
-as201_r2.joinNetwork('net-201-1')
+as201_r1.joinNetwork('net-201-0', "10.0.0.2")
+as201_r1.joinNetwork('net-201-1', "10.0.1.2")
+as201_r2.joinNetwork('net-201-0', "10.0.0.3")
+as201_r2.joinNetwork('net-201-1', "10.0.1.3")
+
+# Generate keepalived.conf content for each router
+r1_conf = generate_keepalived_conf("MASTER", "net-201-0", 51, 200, "10.0.0.1/24")
+r2_conf = generate_keepalived_conf("BACKUP", "net-201-0", 51, 100, "10.0.0.1/24")
+r1_conf += generate_keepalived_conf("MASTER", "eth1", 51, 200, "10.0.1.1/24")
+r2_conf += generate_keepalived_conf("BACKUP", "eth1", 51, 100, "10.0.1.1/24")
+
+as201_r1.setFile(content=r1_conf, path="/etc/keepalived/keepalived.conf")
+as201_r2.setFile(content=r2_conf, path="/etc/keepalived/keepalived.conf")
+
 
 ###############################################################################
 # AS-202    # large office, headquarter OR another data center
@@ -142,7 +166,7 @@ ebgp.addCrossConnectPeering(100, 205, PeerRelationship.Provider)
 # Create hosts in each network
 
 as201_h1 = as201.createHost('web').joinNetwork('net-201-0')
-add_software(as201_h1, [])
+add_software(as201_h1)
 as201_h2 = as201.createHost('dbs').joinNetwork('net-201-1')
 add_software(as201_h2, ['mysql-server'])
 
