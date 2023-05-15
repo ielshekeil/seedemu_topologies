@@ -73,10 +73,10 @@ as201_r2.joinNetwork('net-201-0', "10.0.0.3")
 as201_r2.joinNetwork('net-201-1', "10.0.1.3")
 
 # Generate keepalived.conf content for each router
-r1_conf = generate_keepalived_conf("MASTER", "net-201-0", 51, 200, "10.0.0.1/24")
-r2_conf = generate_keepalived_conf("BACKUP", "net-201-0", 51, 100, "10.0.0.1/24")
-r1_conf += generate_keepalived_conf("MASTER", "eth1", 51, 200, "10.0.1.1/24")
-r2_conf += generate_keepalived_conf("BACKUP", "eth1", 51, 100, "10.0.1.1/24")
+r1_conf  = generate_keepalived_conf("MASTER", "net-201-0", 51, 200, "10.0.0.1/24")
+r2_conf  = generate_keepalived_conf("BACKUP", "net-201-0", 51, 100, "10.0.0.1/24")
+r1_conf += generate_keepalived_conf("MASTER", "net-201-1", 51, 200, "10.0.1.1/24")
+r2_conf += generate_keepalived_conf("BACKUP", "net-201-1", 51, 100, "10.0.1.1/24")
 
 as201_r1.setFile(content=r1_conf, path="/etc/keepalived/keepalived.conf")
 as201_r2.setFile(content=r2_conf, path="/etc/keepalived/keepalived.conf")
@@ -89,12 +89,26 @@ as202_net0 = as202.createNetwork('net-202-0', '10.0.2.0/24')
 as202_net1 = as202.createNetwork('net-202-1', '10.0.3.0/24')
 
 as202_r1   = as202.createRouter('r1')
-as202_r2   = as202.createRouter('r2')
+add_software(as202_r1)
+add_software(as202_r1, ['keepalived']) #, 'iptables'])
 
-as202_r1.joinNetwork('net-202-0')
-as202_r1.joinNetwork('net-202-1')
-as202_r2.joinNetwork('net-202-0')
-as202_r2.joinNetwork('net-202-1')
+as202_r2   = as202.createRouter('r2')
+add_software(as202_r2)
+add_software(as202_r2, ['keepalived']) #, 'iptables'])
+
+as202_r1.joinNetwork('net-202-0', "10.0.2.2")
+as202_r1.joinNetwork('net-202-1', "10.0.3.2")
+as202_r2.joinNetwork('net-202-0', "10.0.2.3")
+as202_r2.joinNetwork('net-202-1', "10.0.3.3")
+
+# Generate keepalived.conf content for each router
+r1_202_conf  = generate_keepalived_conf("MASTER", "net-202-0", 51, 200, "10.0.2.1/24")
+r2_202_conf  = generate_keepalived_conf("BACKUP", "net-202-0", 51, 100, "10.0.2.1/24")
+r1_202_conf += generate_keepalived_conf("MASTER", "net-202-1", 51, 200, "10.0.3.1/24")
+r2_202_conf += generate_keepalived_conf("BACKUP", "net-202-1", 51, 100, "10.0.3.1/24")
+
+as202_r1.setFile(content=r1_202_conf, path="/etc/keepalived/keepalived.conf")
+as202_r2.setFile(content=r2_202_conf, path="/etc/keepalived/keepalived.conf")
 
 ###############################################################################
 # AS-203
@@ -133,6 +147,7 @@ as100_r2.crossConnect(201, 'r2', '10.50.0.3/29')
 # as202_r1 to as100_r1
 as202_r1.crossConnect(100, 'r1', '10.50.0.10/29')
 as100_r1.crossConnect(202, 'r1', '10.50.0.11/29')
+
 # as202_r2 to as100_r2
 as202_r2.crossConnect(100, 'r2', '10.50.0.18/29')
 as100_r2.crossConnect(202, 'r2', '10.50.0.19/29')
@@ -144,22 +159,23 @@ as100_r3.crossConnect(203, 'r1', '10.50.0.27/29')
 # as204_r1 to as100_r3
 as204_r1.crossConnect(100, 'r3', '10.50.0.34/29')
 as100_r3.crossConnect(204, 'r1', '10.50.0.35/29')
+
 # as204_r1 to as100_r4
-as204_r1.crossConnect(100, 'r4', '10.50.0.43/29')
-as100_r4.crossConnect(204, 'r1', '10.50.0.44/29')
+as204_r1.crossConnect(100, 'r4', '10.50.1.34/29')
+as100_r4.crossConnect(204, 'r1', '10.50.1.35/29')
 
 # as205_r1 to as100_r3
-as100_r4.crossConnect(205, 'r1', '10.50.0.50/29')
-as205_r1.crossConnect(100, 'r4', '10.50.0.51/29')
+as205_r1.crossConnect(100, 'r4', '10.50.0.50/29')
+as100_r4.crossConnect(205, 'r1', '10.50.0.51/29')
 
 ###############################################################################
 # BGP peering
 
-ebgp.addCrossConnectPeering(100, 201, PeerRelationship.Provider)
-ebgp.addCrossConnectPeering(100, 202, PeerRelationship.Provider)
-ebgp.addCrossConnectPeering(100, 203, PeerRelationship.Provider)
-ebgp.addCrossConnectPeering(100, 204, PeerRelationship.Provider)
-ebgp.addCrossConnectPeering(100, 205, PeerRelationship.Provider)
+ebgp.addCrossConnectPeering(100, 201, PeerRelationship.Unfiltered) # Provider)
+ebgp.addCrossConnectPeering(100, 202, PeerRelationship.Unfiltered) # Provider)
+ebgp.addCrossConnectPeering(100, 203, PeerRelationship.Unfiltered) # Provider)
+ebgp.addCrossConnectPeering(100, 204, PeerRelationship.Unfiltered) # Provider)
+ebgp.addCrossConnectPeering(100, 205, PeerRelationship.Unfiltered) # Provider)
 
 
 ###############################################################################
@@ -174,22 +190,22 @@ web.install('web201')
 emu.addBinding(Binding('web201', filter = Filter (nodeName='web', asn=201)))
 
 as202_h1 = as202.createHost('host3').joinNetwork('net-202-0')
-add_software(as202_h1, [])
+add_software(as202_h1)
 
 as202_h2 = as202.createHost('host4').joinNetwork('net-202-1')
-add_software(as202_h2, [])
+add_software(as202_h2)
 
 as203_h1 = as203.createHost('host5').joinNetwork('net-203-0')
-add_software(as203_h1, [])
+add_software(as203_h1)
 
 as204_h1 = as204.createHost('host6').joinNetwork('net-204-0')
-add_software(as204_h1, [])
+add_software(as204_h1)
 
 as204_h2 = as204.createHost('host7').joinNetwork('net-204-1')
-add_software(as204_h2, [])
+add_software(as204_h2)
 
 as205_h1 = as205.createHost('host8').joinNetwork('net-205-0')
-add_software(as205_h1, [])
+add_software(as205_h1)
 
 
 ###############################################################################
