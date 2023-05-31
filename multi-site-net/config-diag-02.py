@@ -75,8 +75,8 @@ as201_r2.joinNetwork('net-201-1', "10.0.1.3")
 # Generate keepalived.conf content for each router
 r1_conf  = generate_keepalived_conf("MASTER", "net-201-0", 51, 200, "10.0.0.1/24")
 r2_conf  = generate_keepalived_conf("BACKUP", "net-201-0", 51, 100, "10.0.0.1/24")
-r1_conf += generate_keepalived_conf("MASTER", "net-201-1", 51, 200, "10.0.1.1/24")
-r2_conf += generate_keepalived_conf("BACKUP", "net-201-1", 51, 100, "10.0.1.1/24")
+r1_conf += generate_keepalived_conf("MASTER", "net-201-1", 52, 200, "10.0.1.1/24")
+r2_conf += generate_keepalived_conf("BACKUP", "net-201-1", 52, 100, "10.0.1.1/24")
 
 as201_r1.setFile(content=r1_conf, path="/etc/keepalived/keepalived.conf")
 as201_r2.setFile(content=r2_conf, path="/etc/keepalived/keepalived.conf")
@@ -102,10 +102,10 @@ as202_r2.joinNetwork('net-202-0', "10.0.2.3")
 as202_r2.joinNetwork('net-202-1', "10.0.3.3")
 
 # Generate keepalived.conf content for each router
-r1_202_conf  = generate_keepalived_conf("MASTER", "net-202-0", 51, 200, "10.0.2.1/24")
-r2_202_conf  = generate_keepalived_conf("BACKUP", "net-202-0", 51, 100, "10.0.2.1/24")
-r1_202_conf += generate_keepalived_conf("MASTER", "net-202-1", 51, 200, "10.0.3.1/24")
-r2_202_conf += generate_keepalived_conf("BACKUP", "net-202-1", 51, 100, "10.0.3.1/24")
+r1_202_conf  = generate_keepalived_conf("MASTER", "net-202-0", 53, 200, "10.0.2.1/24")
+r2_202_conf  = generate_keepalived_conf("BACKUP", "net-202-0", 53, 100, "10.0.2.1/24")
+r1_202_conf += generate_keepalived_conf("MASTER", "net-202-1", 54, 200, "10.0.3.1/24")
+r2_202_conf += generate_keepalived_conf("BACKUP", "net-202-1", 54, 100, "10.0.3.1/24")
 
 as202_r1.setFile(content=r1_202_conf, path="/etc/keepalived/keepalived.conf")
 as202_r2.setFile(content=r2_202_conf, path="/etc/keepalived/keepalived.conf")
