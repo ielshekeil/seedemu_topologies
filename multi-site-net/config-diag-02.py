@@ -4,7 +4,6 @@
 from seedemu.layers import Base, Routing, Ebgp, PeerRelationship, Ibgp, Ospf
 from seedemu.services import WebService
 from seedemu.core import Emulator, Binding, Filter
-from seedemu.raps import OpenVpnRemoteAccessProvider
 from seedemu.compiler import Docker
 
 emu     = Emulator()
@@ -14,13 +13,11 @@ ebgp    = Ebgp()
 ibgp    = Ibgp()
 ospf    = Ospf()
 web     = WebService()
-"""
-ovpn    = OpenVpnRemoteAccessProvider()
-"""
+
 
 # Define the function to generate keepalived.conf content
 def generate_keepalived_conf(state, interface, virtual_router_id, priority, virtual_ip):
-    return f"""vrrp_instance VI_1 {{
+    return f"""vrrp_instance VI_{virtual_ip} {{
     state {state}
     interface {interface}
     virtual_router_id {virtual_router_id}
@@ -37,7 +34,7 @@ def generate_keepalived_conf(state, interface, virtual_router_id, priority, virt
 def add_software(h,sw=[]):
     # 'mysql-server'
     # 'iptables'
-    default_software = ['nmap','telnet','telnetd','net-tools']
+    default_software = ['nmap','telnet','telnetd','net-tools', 'traceroute']
     for s in default_software + sw:
         h.addSoftware(s)
 
@@ -207,6 +204,13 @@ add_software(as204_h2)
 as205_h1 = as205.createHost('host8').joinNetwork('net-205-0')
 add_software(as205_h1)
 
+
+as201_h1.appendStartCommand('route delete default gw 10.0.0.2 net-201-0')
+as201_h1.appendStartCommand('route add default gw 10.0.0.1 net-201-0')
+as201_h2.appendStartCommand('route delete default gw 10.0.1.2 net-201-0')
+as201_h2.appendStartCommand('route add default gw 10.0.1.1 net-201-0')
+as202_r1.appendStartCommand('/etc/init.d/keepalived start')
+as202_r2.appendStartCommand('/etc/init.d/keepalived start')
 
 ###############################################################################
 # Rendering
