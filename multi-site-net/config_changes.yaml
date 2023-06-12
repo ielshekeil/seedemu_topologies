@@ -1,0 +1,28 @@
+- file: start.sh
+  node_name: web
+  asn: 201
+  node_type: host
+  replace:
+    - line: ip route add default via 10.10.0.2 dev net-201-0
+      new_line: ip route add default via 10.10.0.1 dev net-201-0
+- file: start.sh
+  node_name: dbs
+  asn: 201
+  node_type: host
+  replace:
+    - line: ip route add default via 10.10.1.2 dev net-201-1
+      new_line: ip route add default via 10.10.1.1 dev net-201-1
+- file: start.sh
+  node_name: host3
+  asn: 202
+  node_type: host
+  replace:
+    - line: ip route add default via 10.10.2.2 dev net-202-0
+      new_line: ip route add default via 10.10.2.1 dev net-202-0
+- file: start.sh
+  node_name: host4
+  asn: 202
+  node_type: host
+  replace:
+    - line: ip route add default via 10.10.3.2 dev net-202-1
+      new_line: ip route add default via 10.10.3.1 dev net-202-1

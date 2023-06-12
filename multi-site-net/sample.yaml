@@ -1,0 +1,23 @@
+- file: start.sh
+  node_name: router1
+  asn: 200
+  node_type: router
+  append:
+    - /etc/init.d/keepalived start
+    - echo "Additional line to append"
+  replace:
+    - line: ip route add default via 10.10.0.2 dev net-201-0
+      new_line: ip route add default via 10.10.0.1 dev net-201-0
+    - line: echo "Some line to replace"
+      new_line: echo "Replaced line"
+- file: start.sh
+  node_name: host1
+  asn: 100
+  node_type: host
+  append:
+    - echo "Appended line"
+  replace:
+    - line: option1 = 10
+      new_line: option1 = 20
+    - line: option2 = "abc"
+      new_line: option2 = "xyz"
